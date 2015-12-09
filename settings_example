@@ -1,2 +1,3 @@
 token = telegram_bot_token
+# user can be a list "user = user1, user2"
 user = telegram_username
