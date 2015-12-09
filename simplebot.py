@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 #
-# Robô Ed Telegram Bot
+# Based on Robô Ed Telegram Bot
 # Copyright (C) 2015 Leandro Toledo de Souza <leandrotoeldodesouza@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -30,11 +30,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv,"ht:p:",["text=","photo="])
     except getopt.GetoptError:
-        print 'test.py -t <inputtext> -p <inputfile>'
+        print 'test.py -t <inputtext> -p <photopath>'
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-             print 'test.py -i <inputfile> -o <outputfile>'
+             print 'test.py -t <inputtext> -p <photopath>'
              sys.exit()
         elif opt in ("-t", "--text"):
              tgtext = arg
@@ -62,10 +62,9 @@ def main(argv):
 
     if tgtext:
         bot.sendMessage(chat_id=chat_id, text=tgtext)
-
+        
     if tgphoto:
-        mphoto = '/home/osmc/Videos/lastsnap.jpg'
-        local_photo_path = mphoto
+        local_photo_path = tgphoto
         with open(local_photo_path, 'rb') as photo:
             bot.sendPhoto(chat_id=chat_id, photo=photo)
 
