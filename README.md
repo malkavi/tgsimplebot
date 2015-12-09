@@ -6,6 +6,7 @@ Based on https://github.com/leandrotoledo/python-telegram-bot
 2. cp settings_example settings
 3. edit settings with your bot-token
 4. pip install configobj
+5. pip install python-telegram-bot
 
 ## Use:
 1. python simplebot.py -t "my text"
