@@ -1,4 +1,5 @@
 # tgsimplebot
+Telegram Bot that you can use to send notifications
 Based on https://github.com/leandrotoledo/python-telegram-bot
 
 ## Install:
@@ -9,6 +10,7 @@ Based on https://github.com/leandrotoledo/python-telegram-bot
 5. pip install python-telegram-bot
 
 ## Use:
-1. python simplebot.py -t "my text"
-2. python simplebot.py -p folder/photo.jpg
-3. python simplebot.py -t "my text" -p folder/photo.jpg
+1. Create the bot and /start a conversation
+2. python simplebot.py -t "my text"
+3. python simplebot.py -p folder/photo.jpg
+4. python simplebot.py -t "my text" -p folder/photo.jpg
