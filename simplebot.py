@@ -23,6 +23,10 @@ import urllib
 from configobj import ConfigObj
 import sys, getopt
 
+from db_manager import ChatIdEntry, Base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 def main(argv):
     tgtext = None
     tgphoto = None
@@ -44,6 +48,14 @@ def main(argv):
              tgphoto = arg
 
     config = ConfigObj(tgconfig)
+    
+    #prepare db
+    engine = create_engine('sqlite:///' + tgconfig + '.db')
+    Base.metadata.create_all(engine)
+    Base.metadata.bind = engine
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    
     # Read variables
     token = config['token']
     user = config['user']
@@ -63,7 +75,7 @@ def main(argv):
         usernames.append(user)
 
     print usernames
-    chat_ids = _get_chat_ids(bot, usernames, fullnames, groups)
+    chat_ids = _get_chat_ids_n_update_db(bot, session, usernames, fullnames, groups)
     updates = bot.getUpdates()
     print [u.message.text for u in updates]
 
@@ -76,6 +88,8 @@ def main(argv):
             local_photo_path = tgphoto
             with open(local_photo_path, 'rb') as photo:
                 bot.sendPhoto(chat_id=chat_id, photo=photo)
+    session.commit()
+    session.close()
 
 
 def _get_bot_updates(bot):
@@ -104,27 +118,88 @@ def _get_new_chat_ids(bot, usernames, fullnames, groups):
     for i, username in enumerate(reversed(usernames)):
         chat = upd_usernames.get(username)
         if chat is not None:
-            yield chat
+            entry = ChatIdEntry(id=chat.id, username=chat.username, firstname=chat.first_name,
+                                surname=chat.last_name)
+            yield entry
             usernames.pop(len_ - i - 1)
 
     len_ = len(fullnames)
     for i, fullname in enumerate(reversed(fullnames)):
         chat = upd_fullnames.get(fullname)
         if chat is not None:
-            yield chat
+            entry = ChatIdEntry(id=chat.id, username=chat.username, firstname=chat.first_name,
+                                surname=chat.last_name)
+            yield entry
             fullnames.pop(len_ - i - 1)
 
     len_ = len(groups)
     for i, grp in enumerate(reversed(groups)):
         chat = upd_groups.get(grp)
         if chat is not None:
-            yield chat
+            entry = ChatIdEntry(id=chat.id, group=chat.title)
+            yield entry
             groups.pop(len_ - i - 1)
 
-def _get_chat_ids(bot, usernames, fullnames, groups):
-    chat_ids = list(_get_new_chat_ids(bot, usernames, fullnames, groups))
+def _get_cached_chat_ids(session, usernames, fullnames, groups):
+    chat_ids = list()
+    cached_usernames = dict((x.username, x)
+                            for x in session.query(ChatIdEntry).filter(ChatIdEntry.username != None).all())
+    cached_fullnames = dict(((x.firstname, x.surname), x)
+                            for x in session.query(ChatIdEntry).filter(ChatIdEntry.firstname != None).all())
+    cached_groups = dict((x.group, x)
+                            for x in session.query(ChatIdEntry).filter(ChatIdEntry.group != None).all())
+
+    len_ = len(usernames)
+    for i, username in enumerate(reversed(usernames)):
+        item = cached_usernames.get(username)
+        if item:
+            chat_ids.append(item)
+            usernames.pop(len_ - i - 1)
+
+    len_ = len(fullnames)
+    for i, fullname in enumerate(reversed(fullnames)):
+        item = cached_fullnames.get(fullname)
+        if item:
+            chat_ids.append(item)
+            fullnames.pop(len_ - i - 1)
+
+    len_ = len(groups)
+    for i, grp in enumerate(reversed(groups)):
+        item = cached_groups.get(grp)
+        if item:
+            chat_ids.append(item)
+            groups.pop(len_ - i - 1)
 
     return chat_ids
+
+#def _get_chat_ids(bot, usernames, fullnames, groups):
+#    chat_ids = list(_get_new_chat_ids(bot, usernames, fullnames, groups))
+#
+#    return chat_ids
+
+def _get_chat_ids(session, bot, usernames, fullnames, groups):
+    chat_ids = list()
+    
+    chat_ids = _get_cached_chat_ids(session, usernames, fullnames, groups)
+              
+    if not (usernames or fullnames or groups):
+        print 'cached ids only'
+        return chat_ids, False
+                                 
+    new_chat_ids = list(_get_new_chat_ids(bot, usernames, fullnames, groups))
+                                       
+    chat_ids.extend(new_chat_ids)
+    return chat_ids, bool(new_chat_ids)
+    
+def _get_chat_ids_n_update_db(bot, session, usernames, fullnames, groups):
+    chat_ids, has_new_chat_ids = _get_chat_ids(session, bot, usernames, fullnames, groups)
+    if has_new_chat_ids:
+        _update_db(session, chat_ids)
+    return chat_ids
+
+def _update_db(session, chat_ids):
+    print 'updating db'
+    session.add_all(chat_ids)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
