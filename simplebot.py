@@ -97,16 +97,24 @@ def _get_bot_updates(bot):
     :type bot: telegram.Bot
     :rtype: (dict[str, telegram.User], dict[(str, str), telegram.User], dict[str, telegram.GroupChat])
     """
-    updates = bot.getUpdates()
+    updates = []
+    last_upd = 0
+    while 1:
+            ups = bot.getUpdates(last_upd, limit=100)
+            updates.extend(ups)
+            if len(ups) < 100:
+                break
+            last_upd = ups[-1].update_id
+
     usernames = dict()
     fullnames = dict()
     groups = dict()
 
     for chat in (x.message.chat for x in updates):
-        if isinstance(chat, telegram.User):
+        if chat.type == 'private':
             usernames[chat.username] = chat
             fullnames[(chat.first_name, chat.last_name)] = chat
-        elif isinstance(chat, telegram.GroupChat):
+        elif chat.type in ('group', 'supergroup' or 'channel'):
             groups[chat.title] = chat
 
     return usernames, fullnames, groups
