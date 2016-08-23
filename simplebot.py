@@ -30,9 +30,10 @@ from sqlalchemy.orm import sessionmaker
 def main(argv):
     tgtext = None
     tgphoto = None
+    tgdoc = None
     tgconfig = 'settings'
     try:
-        opts, args = getopt.getopt(argv,"hc:t:p:",["config=","text=","photo="])
+        opts, args = getopt.getopt(argv,"hc:t:p:d:",["config=","text=","photo=","document="])
     except getopt.GetoptError:
         print 'test.py -t <inputtext> -p <photopath>'
         sys.exit(2)
@@ -46,6 +47,8 @@ def main(argv):
              tgtext = arg
         elif opt in ("-p", "--photo"):
              tgphoto = arg
+        elif opt in ("-d", "--document"):
+             tgdoc = arg
 
     config = ConfigObj(tgconfig)
     
@@ -88,6 +91,12 @@ def main(argv):
             local_photo_path = tgphoto
             with open(local_photo_path, 'rb') as photo:
                 bot.sendPhoto(chat_id=chat_id, photo=photo)
+                
+        if tgdoc:
+            local_doc_path = tgdoc
+            with open(local_doc_path, 'rb') as doc:
+                bot.sendDocument(chat_id=chat_id, document=doc)
+                                        
     session.commit()
     session.close()
 
