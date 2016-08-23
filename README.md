@@ -17,3 +17,4 @@ Based on https://github.com/leandrotoledo/python-telegram-bot
 3. python simplebot.py -p folder/photo.jpg
 4. python simplebot.py -t "my text" -p folder/photo.jpg
 5. python simplebot.py -c ~/folder/settings_file -t "my text"
+6. python simplebot.py -d folder/doc.txt
