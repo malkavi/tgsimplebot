@@ -35,11 +35,11 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv,"hc:t:p:d:",["config=","text=","photo=","document="])
     except getopt.GetoptError:
-        print 'test.py -t <inputtext> -p <photopath>'
+        print( 'test.py -t <inputtext> -p <photopath>' )
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-             print 'test.py -t <inputtext> -p <photopath>'
+             print( 'test.py -t <inputtext> -p <photopath>' )
              sys.exit()
         elif opt in ("-c", "--config"):
              tgconfig = arg
@@ -67,7 +67,7 @@ def main(argv):
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     bot = telegram.Bot(token)  # Telegram Bot Authorization Token
     
-    print bot.getMe()
+    print( bot.getMe() )
 
     usernames = []
     fullnames = []
@@ -77,10 +77,10 @@ def main(argv):
     else:
         usernames.append(user)
 
-    print usernames
+    print( usernames )
     chat_ids = _get_chat_ids_n_update_db(bot, session, usernames, fullnames, groups)
     updates = bot.getUpdates()
-    print [u.message.text for u in updates]
+    print( [u.message.text for u in updates] )
 
     for chat_id in (x.id for x in chat_ids):
 #    chat_id = bot.getUpdates()[0].message.chat_id
@@ -200,7 +200,7 @@ def _get_chat_ids(session, bot, usernames, fullnames, groups):
     chat_ids = _get_cached_chat_ids(session, usernames, fullnames, groups)
               
     if not (usernames or fullnames or groups):
-        print 'cached ids only'
+        print( 'cached ids only' )
         return chat_ids, False
                                  
     new_chat_ids = list(_get_new_chat_ids(bot, usernames, fullnames, groups))
@@ -215,7 +215,7 @@ def _get_chat_ids_n_update_db(bot, session, usernames, fullnames, groups):
     return chat_ids
 
 def _update_db(session, chat_ids):
-    print 'updating db'
+    print( 'updating db' )
     session.add_all(chat_ids)
 
 if __name__ == '__main__':
